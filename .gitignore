@@ -2,3 +2,5 @@
 /packages/web/node_modules
 /packages/server/node_modules
 /build
+/.pnpm-debug.log
+/pnpm-workspace
