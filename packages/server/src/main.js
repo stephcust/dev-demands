@@ -1,34 +1,28 @@
-import express from 'express';
-import cors from 'cors';
-import { ApolloServer } from 'apollo-server-express'
+import express from "express";
+import { ApolloServer, gql } from "apollo-server-express";
+import http from "http";
+import typeDefs from "./graphql/typeDefs";
+import resolvers from "./graphql/resolvers";
 
-const server = express();
+async function startApolloServer() {
+  const app = express();
+  const httpServer = http.createServer(app);
 
-//server.use(cors());
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
-server
-    .get('/status', (_, response) => {
-    response.send({
-        status: 'Okay'
-    });
-});
+  await server.start();
+  server.applyMiddleware({
+    app,
+    cors: {
+      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+    },
+    bodyParserConfig: true,
+  });
+  await new Promise((resolve) => httpServer.listen({ port: 8000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:8000${server.graphqlPath}`);
+}
 
-const enableCors = cors({ origin: 'http://localhost:3000' });
-
-server
-    .options('/authenticate', enableCors)
-    .post('/authenticate', enableCors, express.json(), (request, response) => {
-        console.log("Email", request.body.email, "Senha", request.body.password);
-        response.send({
-            Okay: true,
-        });
-});
-
-
-
-const PORT = process.env.PORT ? parseInt( process.env.PORT ) : 8000;
-const HOSTNAME = process.env.HOSTNAME || '127.0.0.1';
-
-server.listen(PORT, HOSTNAME, () => {
-    console.log(`Server is listening at http://${HOSTNAME}:${PORT}`);
-});
+startApolloServer();
